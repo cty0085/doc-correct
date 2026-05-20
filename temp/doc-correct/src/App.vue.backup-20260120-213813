@@ -1,0 +1,143 @@
+﻿<template>
+  <div class="app-container">
+    <h1>文档错别字识别系统（后端集成测试版）</h1>
+    
+    <div class="test-section">
+      <h2>后端连接测试</h2>
+      <button @click="testBackend">测试后端连接</button>
+      <div v-if="testResult" class="result">{{ testResult }}</div>
+    </div>
+
+    <div class="test-section">
+      <h2>AI检查测试</h2>
+      <textarea v-model="testText" placeholder="输入测试文本..."></textarea>
+      <button @click="testAiCheck">测试AI检查</button>
+      <div v-if="aiResult" class="result">
+        <p>发现错误: {{ aiResult.count }}个</p>
+        <p>修正后: {{ aiResult.correctedText }}</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>手动检查测试</h2>
+      <button @click="testManualCheck">测试手动检查</button>
+      <div v-if="manualResult" class="result">
+        <p>发现错误: {{ manualResult.count }}个</p>
+        <div v-for="(error, index) in manualResult.errors" :key="index">
+          {{ error.errorWord }}  {{ error.correctWord }}
+        </div>
+      </div>
+    </div>
+
+    <div class="status">
+      <p>后端状态: {{ backendStatus }}</p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+import { testConnection, aiCheck, manualCheck } from "./utils/api.js";
+
+const testResult = ref("");
+const testText = ref("农甜需要开恳和按装工续");
+const aiResult = ref(null);
+const manualResult = ref(null);
+const backendStatus = ref("未知");
+
+const testBackend = async () => {
+  try {
+    const result = await testConnection();
+    testResult.value = ` 后端连接成功: ${result.message}`;
+    backendStatus.value = "在线";
+  } catch (error) {
+    testResult.value = ` 后端连接失败: ${error.message}`;
+    backendStatus.value = "离线";
+  }
+};
+
+const testAiCheck = async () => {
+  try {
+    const result = await aiCheck(testText.value);
+    aiResult.value = result.data;
+    testResult.value = ` AI检查成功，发现${result.data.count}个错误`;
+  } catch (error) {
+    testResult.value = ` AI检查失败: ${error.message}`;
+  }
+};
+
+const testManualCheck = async () => {
+  try {
+    const result = await manualCheck(testText.value);
+    manualResult.value = result.data;
+    testResult.value = ` 手动检查成功，发现${result.data.count}个错误`;
+  } catch (error) {
+    testResult.value = ` 手动检查失败: ${error.message}`;
+  }
+};
+
+// 页面加载时自动测试连接
+testBackend();
+</script>
+
+<style>
+.app-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.test-section {
+  margin: 30px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+h1, h2 {
+  color: #333;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.result {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.status {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: #333;
+  color: white;
+  border-radius: 20px;
+}
+</style>
