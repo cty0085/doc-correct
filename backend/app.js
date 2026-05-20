@@ -22,19 +22,6 @@ app.use(cors({
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// ========== pycorrector 代理路由 ==========
-app.post('/api/correct', async (req, res) => {
-  try {
-    const response = await axios.post('http://localhost:5008/correct', req.body, {
-      timeout: 30000
-    });
-    res.json(response.data);
-  } catch (error) {
-    console.error('[pycorrector] 代理请求失败:', error.message);
-    res.json({ errors: [] });
-  }
-});
-
 // ========== 静态文件服务 ==========
 const uploadDir = path.join(__dirname, "uploads");
 app.use("/uploads", express.static(uploadDir));
@@ -1072,32 +1059,17 @@ ${text}`;
           console.error("AI错别字校对失败，降级为规则库：", e.message);
         }
 
-        // 2. 调用pycorrector服务
-        let pycResult = null;
-        try {
-          console.log('[pycorrector] 正在请求 pycorrector 服务...');
-          const pycRes = await axios.post('http://127.0.0.1:5008/correct', { text });
-          pycResult = pycRes.data?.errors || [];
-          console.log(`[pycorrector] 返回错别字数量: ${pycResult.length}`);
-        } catch (e) {
-          console.error("[pycorrector] 服务调用失败：", e.message);
-        }
-
-        // 3. 规则库辅助
+        // 2. 规则库辅助
         const { errors: ruleErrors, correctedText } = checkTextForErrors(text);
 
-        // 4. 合并三方结果（去重，优先AI>pycorrector>规则库）
+        // 3. 合并结果（去重，优先AI>规则库）
         let allErrors = [];
         const key = e => e.errorWord + '@' + e.position;
         const aiSet = aiResult && Array.isArray(aiResult) ? new Set(aiResult.map(key)) : new Set();
-        const pycSet = pycResult && Array.isArray(pycResult) ? new Set(pycResult.map(key)) : new Set();
         if (aiResult && Array.isArray(aiResult)) {
           allErrors = aiResult.slice();
         }
-        if (pycResult && Array.isArray(pycResult)) {
-          allErrors = allErrors.concat(pycResult.filter(e => !aiSet.has(key(e))));
-        }
-        allErrors = allErrors.concat(ruleErrors.filter(e => !aiSet.has(key(e)) && !pycSet.has(key(e))));
+        allErrors = allErrors.concat(ruleErrors.filter(e => !aiSet.has(key(e))));
 
         // 5. 清理临时文件
         try {

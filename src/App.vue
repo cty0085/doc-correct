@@ -1194,25 +1194,7 @@ const startCheck = async () => {
       console.warn('基础规则检查不可用')
     }
 
-    // 3. 调用 pycorrector 服务
-    let pycorrectorErrors = []
-    try {
-      processingText.value = '正在调用 pycorrector 纠错服务...'
-      console.log('[pycorrector] 正在请求 pycorrector 服务...')
-      const pycResponse = await axios.post('/api/correct', {
-        text: originText.value
-      }, {
-        timeout: 30000
-      })
-      if (pycResponse.data && Array.isArray(pycResponse.data.errors)) {
-        pycorrectorErrors = pycResponse.data.errors
-        console.log(`[pycorrector] 返回错别字数量: ${pycorrectorErrors.length}`)
-      }
-    } catch (e) {
-      console.warn('[pycorrector] 服务调用失败:', e.message)
-    }
-
-    // 4. 分段调用 AI 进行深度审校
+    // 3. 分段调用 AI 进行深度审校
     const MAX_CHUNK_SIZE = 1500 
     const chunks = []
     for (let i = 0; i < originText.value.length; i += MAX_CHUNK_SIZE) {
@@ -1338,7 +1320,7 @@ ${chunk}`
       }
     }
 
-    // 合并错误 (AI > pycorrector > Rule 优先级)
+    // 合并错误 (AI > Rule 优先级)
     const finalErrors = []
     const seenPositions = new Set()
 
@@ -1347,14 +1329,6 @@ ${chunk}`
       if (!seenPositions.has(err.position)) {
         finalErrors.push({ ...err, source: 'AI', isSelected: true })
         seenPositions.add(err.position)
-      }
-    })
-
-    // pycorrector 结果（去重）
-    pycorrectorErrors.forEach(pyc => {
-      if (!seenPositions.has(pyc.position)) {
-        finalErrors.push({ ...pyc, source: 'Pycorrector', isSelected: true })
-        seenPositions.add(pyc.position)
       }
     })
 
