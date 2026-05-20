@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档错别字识别系统 - 测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        
+        .status-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #4a90e2;
+        }
+        
+        .status-card.success {
+            border-left-color: #2ecc71;
+        }
+        
+        .status-card.error {
+            border-left-color: #e74c3c;
+        }
+        
+        .status-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #4a90e2;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        
+        button.test {
+            background: #2ecc71;
+        }
+        
+        button.reset {
+            background: #e74c3c;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            display: none;
+        }
+        
+        .result.success {
+            background: #e8f8f0;
+            border-left: 4px solid #2ecc71;
+            color: #27ae60;
+            display: block;
+        }
+        
+        .result.error {
+            background: #ffeaea;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+            display: block;
+        }
+        
+        .links {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .links a {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 10px 20px;
+            background: #4a90e2;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .links a:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+        
+        .api-test {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .api-test h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+        
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            overflow: auto;
+            font-size: 13px;
+            display: none;
+        }
+        
+        pre.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1> 文档错别字识别系统</h1>
+    <div class="subtitle">系统状态测试页面</div>
+    
+    <div class="container">
+        <h2>系统状态</h2>
+        <div class="status-container">
+            <div class="status-card" id="frontend-status">
+                <h3>前端服务</h3>
+                <div class="status-text">检测中...</div>
+                <div class="test-buttons">
+                    <button onclick="testFrontend()">测试前端</button>
+                </div>
+            </div>
+            
+            <div class="status-card" id="backend-status">
+                <h3>后端API服务</h3>
+                <div class="status-text">检测中...</div>
+                <div class="test-buttons">
+                    <button onclick="testBackend()" class="test">测试连接</button>
+                    <button onclick="testHealth()">健康检查</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result" id="test-result"></div>
+        
+        <div class="api-test">
+            <h4>API测试</h4>
+            <textarea id="test-text">农甜需要开恳和按装工续，这是因该注意的事项。</textarea>
+            <div class="test-buttons">
+                <button onclick="testAICheck()" class="test">测试AI检查</button>
+                <button onclick="testManualCheck()">测试手动检查</button>
+                <button onclick="resetTest()" class="reset">重置</button>
+            </div>
+            <pre id="api-result"></pre>
+        </div>
+        
+        <div class="links">
+            <a href="http://localhost:5174" target="_blank"> 打开完整应用</a>
+            <a href="http://localhost:3001" target="_blank"> 查看后端API</a>
+            <a href="http://localhost:3001/health" target="_blank"> 健康检查</a>
+        </div>
+    </div>
+    
+    <script>
+        // 检测前端
+        async function testFrontend() {
+            const result = document.getElementById('test-result');
+            const statusCard = document.getElementById('frontend-status');
+            
+            try {
+                const response = await fetch('http://localhost:5174', { method: 'HEAD' });
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = ' 前端服务运行正常 (端口: 5174)';
+                    statusCard.className = 'status-card success';
+                    statusCard.querySelector('.status-text').textContent = '在线 (端口: 5174)';
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = ' 前端服务无法访问，可能运行在其他端口';
+                statusCard.className = 'status-card error';
+                statusCard.querySelector('.status-text').textContent = '离线或端口错误';
+            }
+        }
+        
+        // 检测后端连接
+        async function testBackend() {
+            const result = document.getElementById('test-result');
+            const statusCard = document.getElementById('backend-status');
+            
+            try {
+                const response = await fetch('http://localhost:3001');
+                if (response.ok) {
+                    const data = await response.json();
+                    result.className = 'result success';
+                    result.textContent = ` 后端API服务正常: ${data.message}`;
+                    statusCard.className = 'status-card success';
+                    statusCard.querySelector('.status-text').textContent = '在线';
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = ' 后端API服务无法访问';
+                statusCard.className = 'status-card error';
+                statusCard.querySelector('.status-text').textContent = '离线';
+            }
+        }
+        
+        // 健康检查
+        async function testHealth() {
+            const result = document.getElementById('test-result');
+            
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    result.className = 'result success';
+                    result.textContent = ` 后端健康状态: ${data.status} (${data.timestamp})`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = ' 健康检查失败';
+            }
+        }
+        
+        // 测试AI检查
+        async function testAICheck() {
+            const text = document.getElementById('test-text').value;
+            const result = document.getElementById('api-result');
+            
+            if (!text.trim()) {
+                alert('请输入测试文本');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/check/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const data = await response.json();
+                result.className = 'visible';
+                result.textContent = JSON.stringify(data, null, 2);
+                
+            } catch (error) {
+                result.className = 'visible';
+                result.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        // 测试手动检查
+        async function testManualCheck() {
+            const text = document.getElementById('test-text').value;
+            const result = document.getElementById('api-result');
+            
+            if (!text.trim()) {
+                alert('请输入测试文本');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/check/manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const data = await response.json();
+                result.className = 'visible';
+                result.textContent = JSON.stringify(data, null, 2);
+                
+            } catch (error) {
+                result.className = 'visible';
+                result.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        // 重置测试
+        function resetTest() {
+            document.getElementById('test-text').value = '农甜需要开恳和按装工续，这是因该注意的事项。';
+            document.getElementById('api-result').className = '';
+            document.getElementById('test-result').className = 'result';
+        }
+        
+        // 页面加载时自动测试
+        window.onload = function() {
+            testFrontend();
+            testBackend();
+        };
+    </script>
+</body>
+</html>
